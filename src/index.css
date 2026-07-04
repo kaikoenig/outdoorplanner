@@ -613,6 +613,15 @@ body {
   gap: 0.5rem;
 }
 
+.container-card__collapse-toggle {
+  display: flex;
+  padding: 0.2rem;
+}
+
+.tour-layout__collapse-all {
+  align-self: flex-start;
+}
+
 .drag-handle {
   cursor: grab;
   border: none;

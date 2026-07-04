@@ -52,6 +52,16 @@ export function insertContainerNode(
   );
 }
 
+/** Ids of every container in the tree, including nested ones, in depth-first order. */
+export function allContainerIds(containers: TourContainer[]): string[] {
+  const ids: string[] = [];
+  for (const c of containers) {
+    ids.push(c.id);
+    ids.push(...allContainerIds(c.containers));
+  }
+  return ids;
+}
+
 /** True if `targetId` is `node` itself or one of its (nested) descendants. */
 export function isSameOrDescendant(node: TourContainer, targetId: string): boolean {
   if (node.id === targetId) return true;

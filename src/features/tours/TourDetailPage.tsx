@@ -15,6 +15,7 @@ import { db } from '../../db';
 import type { EquipmentItem, Tour, TourContainer } from '../../types/models';
 import { formatWeight } from '../../utils/format';
 import {
+  allContainerIds,
   findContainerNode,
   insertContainerNode,
   isSameOrDescendant,
@@ -151,6 +152,7 @@ function PoolBox({
 export function TourDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
 
   const tour = useLiveQuery(() => (id ? db.tours.get(id) : undefined), [id]);
   const equipmentItems = useLiveQuery(() => db.equipmentItems.toArray(), []);
@@ -175,6 +177,21 @@ export function TourDetailPage() {
 
   async function handleRenameTour(name: string) {
     await persist({ name });
+  }
+
+  function handleToggleCollapse(containerId: string) {
+    setCollapsedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(containerId)) next.delete(containerId);
+      else next.add(containerId);
+      return next;
+    });
+  }
+
+  function handleToggleCollapseAll() {
+    const ids = allContainerIds(currentTour.containers);
+    const allCollapsed = ids.length > 0 && ids.every((id) => collapsedIds.has(id));
+    setCollapsedIds(allCollapsed ? new Set() : new Set(ids));
   }
 
   async function handleRemoveContainer(containerId: string) {
@@ -320,12 +337,22 @@ export function TourDetailPage() {
               <p className="empty-state">Noch kein Container zu dieser Tour hinzugefügt. Ziehe einen Container aus der Box links hierher.</p>
             )}
 
+            {currentTour.containers.length > 0 && (
+              <button className="button-link tour-layout__collapse-all" onClick={handleToggleCollapseAll}>
+                {allContainerIds(currentTour.containers).every((id) => collapsedIds.has(id))
+                  ? 'Alle ausklappen'
+                  : 'Alle einklappen'}
+              </button>
+            )}
+
             {currentTour.containers.map((container) => (
               <ContainerCard
                 key={container.id}
                 container={container}
                 itemsById={itemsById}
                 counts={counts}
+                collapsedIds={collapsedIds}
+                onToggleCollapse={handleToggleCollapse}
                 onRename={handleRenameContainer}
                 onRemoveContainer={handleRemoveContainer}
                 onQuantityChange={handleQuantityChange}
