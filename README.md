@@ -43,24 +43,16 @@ Die Seite ist eine reine Single-Page-Application ohne Backend:
 npm run build
 ```
 
-Das Ergebnis landet in `dist/` und kann direkt auf jedem statischen Hosting (z.B. GitLab Pages) ausgeliefert werden.
+Das Ergebnis landet in `dist/` und kann direkt auf jedem statischen Hosting ausgeliefert werden.
 
-## Deployment: GitHub → GitLab Pages
+## Deployment: GitHub Pages
 
-Der Quellcode liegt in diesem GitHub-Repository, die veröffentlichte Seite läuft aber auf GitLab Pages, da kein eigener Server betrieben werden soll. Der Ablauf:
-
-1. Ein GitHub-Actions-Workflow (`.github/workflows/deploy-gitlab-pages.yml`) baut das Projekt bei jedem Push auf `main`.
-2. Die gebauten Dateien werden als `public/` zusammen mit einer minimalen `.gitlab-ci.yml` (aus `deploy/gitlab-ci.yml`) in ein separates GitLab-Repository gepusht.
-3. GitLab Pages veröffentlicht den Inhalt von `public/` automatisch.
+Ein GitHub-Actions-Workflow (`.github/workflows/deploy-github-pages.yml`) baut das Projekt bei jedem Push auf `main` und veröffentlicht `dist/` direkt über GitHub Pages – kein separates Repo/System nötig.
 
 ### Einmalige Einrichtung
 
-1. In GitLab ein leeres Projekt anlegen (z.B. `outdoorplanner`), das ausschließlich als Pages-Ziel dient.
-2. In diesem GitLab-Projekt unter **Settings → Repository → Deploy tokens** einen Token mit Scope `write_repository` erstellen.
-3. Im GitHub-Repository unter **Settings → Secrets and variables → Actions** zwei Secrets anlegen:
-   - `GITLAB_DEPLOY_TOKEN`: der eben erstellte Deploy Token
-   - `GITLAB_REPO`: Namespace/Projektname in GitLab, z.B. `dein-username/outdoorplanner`
-4. Push auf `main` in GitHub – die Action baut und deployed automatisch. Die Seite ist danach unter `https://<namespace>.gitlab.io/<projekt>/` erreichbar.
+1. Im GitHub-Repository unter **Settings → Pages** bei "Source" **GitHub Actions** auswählen (statt "Deploy from a branch").
+2. Push auf `main` – die Action baut und deployed automatisch. Die Seite ist danach unter `https://<dein-github-username>.github.io/<repo-name>/` erreichbar.
 
 ## Datenmodell
 

@@ -19,8 +19,8 @@ There is no test suite. Verify changes by running `npm run build` (which type-ch
 This is a fully static, serverless single-page app (React + TypeScript + Vite). There is no backend and no external database by design — all data lives in the browser's IndexedDB via [Dexie](https://dexie.org/) (`src/db/index.ts`). This constraint drives several decisions:
 
 - Routing uses `HashRouter` (`src/main.tsx`), not `BrowserRouter`, so client-side routes work with no server-side rewrite rule on static hosting.
-- `vite.config.ts` sets `base: './'` (relative asset paths) so the built app works when hosted under an arbitrary subpath (e.g. GitLab Pages project pages).
-- Deployment (see README) is GitHub → GitHub Actions build → push of the built `dist/` into a separate GitLab repo for GitLab Pages, since the app intentionally has no server component.
+- `vite.config.ts` sets `base: './'` (relative asset paths) so the built app works when hosted under an arbitrary subpath (e.g. GitHub Pages project pages).
+- Deployment (see README) is a GitHub Actions workflow (`.github/workflows/deploy-github-pages.yml`) that builds and publishes `dist/` directly to GitHub Pages on every push to `main`, since the app intentionally has no server component.
 - The PWA plugin (`vite-plugin-pwa`) makes the app installable/offline-capable, reinforcing that everything must work without a network round-trip.
 
 ### Data model (`src/types/models.ts`)
