@@ -1,4 +1,5 @@
 import { NavLink, Route, Routes } from 'react-router-dom';
+import { BackupPage } from './features/backup/BackupPage';
 import { EquipmentFormPage } from './features/inventory/EquipmentFormPage';
 import { InventoryPage } from './features/inventory/InventoryPage';
 import { TourDetailPage } from './features/tours/TourDetailPage';
@@ -16,6 +17,9 @@ function App() {
           <NavLink to="/tours" className={({ isActive }) => (isActive ? 'active' : '')}>
             Touren
           </NavLink>
+          <NavLink to="/backup" className={({ isActive }) => (isActive ? 'active' : '')}>
+            Daten
+          </NavLink>
         </nav>
       </header>
 
@@ -27,6 +31,7 @@ function App() {
           <Route path="/inventory/:id/edit" element={<EquipmentFormPage />} />
           <Route path="/tours" element={<ToursPage />} />
           <Route path="/tours/:id" element={<TourDetailPage />} />
+          <Route path="/backup" element={<BackupPage />} />
         </Routes>
       </main>
     </div>

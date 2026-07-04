@@ -4,3 +4,7 @@ export function formatWeight(grams: number): string {
   }
   return `${grams} g`;
 }
+
+export function uniqueSorted(values: string[]): string[] {
+  return Array.from(new Set(values.filter((v) => v.trim() !== ''))).sort((a, b) => a.localeCompare(b, 'de'));
+}

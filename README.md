@@ -1,21 +1,41 @@
 # Outdoor Planner
 
-Webbasierte Verwaltung von Outdoor-Ausrüstung: Inventarliste mit Bildern und Touren­planung, bei der Ausrüstungsgegenstände vom Typ "Container" (z.B. Rucksäcke) mit anderer Ausrüstung befüllt werden können. Das Gesamtgewicht der Tour wird live berechnet.
+Webbasierte Verwaltung von Outdoor-Ausrüstung: Inventarliste mit Bildern und Tourenplanung, bei der Ausrüstungsgegenstände vom Typ "Container" (z.B. Rucksäcke) beliebig verschachtelt mit anderer Ausrüstung befüllt werden können. Das Gesamtgewicht der Tour wird live berechnet.
+
+## Lokal starten
+
+Voraussetzung: [Node.js](https://nodejs.org/) (Version 20 oder neuer).
+
+```bash
+npm install
+npm run dev
+```
+
+Das Terminal zeigt danach eine URL an (standardmäßig `http://localhost:5173`) – dort im Browser öffnen. Änderungen am Code werden per Hot-Reload sofort übernommen.
+
+Alle Daten werden lokal in der IndexedDB des Browsers gespeichert. Zum Zurücksetzen: Browser-DevTools → Application/Storage → IndexedDB → Datenbank `outdoor-planner` löschen.
+
+Weitere nützliche Befehle:
+
+```bash
+npm run build     # Production-Build nach dist/
+npm run preview   # gebauten dist/-Ordner lokal ausliefern
+npm run lint      # oxlint
+```
+
+## Features
+
+- **Inventar**: Ausrüstungsgegenstände mit Name, Typ (Container/Gegenstand), Kategorie, Marke, Gewicht, Anzahl und Bild. Listen- und Rasteransicht, sortierbare Spalten, Filter nach Typ/Kategorie/Marke. Bilder per Datei-Upload oder Drag & Drop (auch von anderen Webseiten, sofern deren Server CORS erlaubt).
+- **Tourenplanung**: Container (links) und Ausrüstung (rechts) per Drag & Drop in die Tour bzw. ineinander verschachteln, nach Kategorie gruppiert und auf-/zuklappbar. Live-Gesamtgewicht pro Container und Tour. Mengenbegrenzung anhand des Inventarbestands – bereits vollständig verplante Gegenstände verschwinden aus der Auswahl.
+- **Daten sichern**: Export/Import des gesamten Datenbestands (Inventar + Touren + Bilder) als einzelne JSON-Datei, z.B. zum Übertragen auf ein anderes Gerät oder als Backup.
 
 ## Architektur
 
 Die Seite ist eine reine Single-Page-Application ohne Backend:
 
 - **Daten**: Alle Ausrüstungsgegenstände, Bilder und Touren werden lokal im Browser in **IndexedDB** gespeichert (via [Dexie](https://dexie.org/)). Es gibt keinen Server und keine externe Datenbank – die App läuft komplett clientseitig und ist als PWA auch offline nutzbar.
-- **Kehrseite**: Die Daten sind an den jeweiligen Browser/das Gerät gebunden. Es gibt aktuell keine automatische Synchronisation zwischen Geräten.
-- **Frontend**: React + TypeScript + Vite, `@dnd-kit` für das Drag & Drop beim Befüllen von Containern, `react-router-dom` (HashRouter, damit Routing auch ohne Server-Rewrite auf statischem Hosting funktioniert).
-
-## Entwicklung
-
-```bash
-npm install
-npm run dev
-```
+- **Kehrseite**: Die Daten sind an den jeweiligen Browser/das Gerät gebunden. Es gibt keine automatische Synchronisation zwischen Geräten – dafür die manuelle Export/Import-Funktion unter "Daten".
+- **Frontend**: React + TypeScript + Vite, `@dnd-kit` für das Drag & Drop, `react-router-dom` (HashRouter, damit Routing auch ohne Server-Rewrite auf statischem Hosting funktioniert).
 
 ## Build
 
@@ -44,9 +64,6 @@ Der Quellcode liegt in diesem GitHub-Repository, die veröffentlichte Seite läu
 
 ## Datenmodell
 
-- **EquipmentItem**: `name`, `type` (`container` | `item`), `category`, `weight` (g), `brand`, `quantity`, optionales `image` (Blob)
-- **Tour**: `name`, Liste von Containern; jeder Container referenziert einen `EquipmentItem` vom Typ `container`, hat einen tourspezifischen Namen und eine Liste befüllter Gegenstände mit Menge
-
-## Backup / Datenmigration
-
-Da die Daten lokal im Browser liegen, empfiehlt sich früher oder später eine Export/Import-Funktion (JSON + Bilder) als manuelles Backup bzw. zum Übertragen auf ein anderes Gerät. Das ist noch nicht umgesetzt.
+- **EquipmentItem**: `name`, `type` (`container` | `item`), `category`, `brand`, `weight` (g), `quantity`, optionales `image` (Blob)
+- **Tour**: `name`, Liste von Top-Level-Containern
+- **TourContainer**: referenziert einen `EquipmentItem` vom Typ `container`, hat einen tourspezifischen Namen, eine Liste befüllter Gegenstände mit Menge (`contents`) sowie eine Liste verschachtelter Container (`containers`) – Container können so beliebig tief ineinander gepackt werden

@@ -24,6 +24,7 @@ export interface TourContainer {
   equipmentItemId: string; // references an EquipmentItem of type 'container'
   name: string; // tour-specific name, e.g. "Rucksack Kai"
   contents: TourContentEntry[];
+  containers: TourContainer[]; // nested containers, packed inside this one
 }
 
 export interface Tour {

@@ -1,9 +1,12 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useState, type FormEvent } from 'react';
+import { useState, type DragEvent, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { v4 as uuid } from 'uuid';
+import { NumberStepper } from '../../components/NumberStepper';
 import { db } from '../../db';
 import type { EquipmentItem, EquipmentType } from '../../types/models';
+import { extractDraggedImageUrl } from '../../utils/dragImage';
+import { uniqueSorted } from '../../utils/format';
 import { EquipmentImage } from './EquipmentImage';
 
 const EMPTY: Omit<EquipmentItem, 'id' | 'createdAt' | 'updatedAt'> = {
@@ -22,9 +25,14 @@ export function EquipmentFormPage() {
   const isEdit = Boolean(id);
 
   const existing = useLiveQuery(() => (id ? db.equipmentItems.get(id) : undefined), [id]);
+  const allItems = useLiveQuery(() => db.equipmentItems.toArray(), []);
+  const categories = uniqueSorted((allItems ?? []).map((i) => i.category));
 
   const [form, setForm] = useState(EMPTY);
   const [loaded, setLoaded] = useState(!isEdit);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   if (existing && !loaded) {
     setForm({
@@ -53,7 +61,51 @@ export function EquipmentFormPage() {
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
+    setImageError(null);
     setForm((f) => ({ ...f, image: file ?? undefined }));
+  }
+
+  function handleDragOver(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setIsDragOver(true);
+  }
+
+  function handleDragLeave() {
+    setIsDragOver(false);
+  }
+
+  async function handleImageDrop(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setIsDragOver(false);
+    setImageError(null);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      setForm((f) => ({ ...f, image: file }));
+      return;
+    }
+
+    const url = extractDraggedImageUrl(e.dataTransfer);
+    if (!url) {
+      setImageError('Kein Bild in den abgelegten Daten erkannt.');
+      return;
+    }
+
+    setImageLoading(true);
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const blob = await response.blob();
+      if (!blob.type.startsWith('image/')) throw new Error('Keine Bilddatei');
+      setForm((f) => ({ ...f, image: blob }));
+    } catch {
+      setImageError(
+        'Bild konnte nicht geladen werden – vermutlich blockiert die Webseite den Zugriff (CORS). ' +
+          'Bitte das Bild stattdessen lokal speichern und über "Datei auswählen" hochladen.',
+      );
+    } finally {
+      setImageLoading(false);
+    }
   }
 
   if (isEdit && !loaded) {
@@ -87,10 +139,16 @@ export function EquipmentFormPage() {
         <label>
           Kategorie
           <input
+            list="category-options"
             value={form.category}
             onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
             placeholder="z.B. Zelt, Kochgeschirr, Bekleidung"
           />
+          <datalist id="category-options">
+            {categories.map((c) => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
         </label>
 
         <label>
@@ -111,21 +169,35 @@ export function EquipmentFormPage() {
 
         <label>
           Anzahl
-          <input
-            required
-            type="number"
+          <NumberStepper
             min={1}
             value={form.quantity}
-            onChange={(e) => setForm((f) => ({ ...f, quantity: Number(e.target.value) }))}
+            onChange={(quantity) => setForm((f) => ({ ...f, quantity }))}
           />
         </label>
 
         <label>
           Bild
+          <div
+            className={`image-dropzone ${isDragOver ? 'image-dropzone--over' : ''}`}
+            onDragOver={handleDragOver}
+            onDragEnter={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleImageDrop}
+          >
+            {form.image ? (
+              <EquipmentImage image={form.image} alt={form.name} size={96} />
+            ) : (
+              <span className="image-dropzone__hint">
+                Bild hierher ziehen (auch von einer anderen Webseite) oder Datei auswählen
+              </span>
+            )}
+            {imageLoading && <span className="image-dropzone__status">Lade Bild...</span>}
+          </div>
           <input type="file" accept="image/*" onChange={handleImageChange} />
         </label>
 
-        {form.image && <EquipmentImage image={form.image} alt={form.name} size={96} />}
+        {imageError && <p className="form-error">{imageError}</p>}
 
         <div className="form-actions">
           <button type="submit" className="button button--primary">

@@ -9,7 +9,11 @@ export function containerWeight(
     const item = itemsById.get(entry.equipmentItemId);
     return sum + (item?.weight ?? 0) * entry.quantity;
   }, 0);
-  return own + contentsWeight;
+  const nestedWeight = container.containers.reduce(
+    (sum, child) => sum + containerWeight(child, itemsById),
+    0,
+  );
+  return own + contentsWeight + nestedWeight;
 }
 
 export function tourWeight(tour: Tour, itemsById: Map<string, EquipmentItem>): number {
