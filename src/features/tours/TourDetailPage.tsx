@@ -13,7 +13,7 @@ import { v4 as uuid } from 'uuid';
 import { ChevronIcon } from '../../components/icons';
 import { db } from '../../db';
 import type { EquipmentItem, Tour, TourContainer } from '../../types/models';
-import { formatWeight } from '../../utils/format';
+import { categoryKey, compareCategories, formatWeight } from '../../utils/format';
 import {
   allContainerIds,
   findContainerNode,
@@ -62,20 +62,14 @@ function RootDropZone() {
   );
 }
 
-const UNCATEGORIZED = 'Ohne Kategorie';
-
 function groupByCategory(items: EquipmentItem[]): Array<[string, EquipmentItem[]]> {
   const groups = new Map<string, EquipmentItem[]>();
   for (const item of items) {
-    const key = item.category.trim() || UNCATEGORIZED;
+    const key = categoryKey(item.category);
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(item);
   }
-  return Array.from(groups.entries()).sort(([a], [b]) => {
-    if (a === UNCATEGORIZED) return 1;
-    if (b === UNCATEGORIZED) return -1;
-    return a.localeCompare(b, 'de');
-  });
+  return Array.from(groups.entries()).sort(([a], [b]) => compareCategories(a, b));
 }
 
 function CategoryGroup({

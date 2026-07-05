@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { GridIcon, ListIcon, PencilIcon, TrashIcon } from '../../components/icons';
 import { db } from '../../db';
 import type { EquipmentItem } from '../../types/models';
-import { formatWeight, uniqueSorted } from '../../utils/format';
+import { categoryKey, compareCategories, formatWeight, uniqueSorted } from '../../utils/format';
 import { EquipmentImage } from './EquipmentImage';
 
 type SortKey = 'name' | 'category' | 'brand' | 'weight' | 'quantity';
@@ -55,18 +55,37 @@ export function InventoryPage() {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [showContainer, setShowContainer] = useState(true);
   const [showItem, setShowItem] = useState(true);
-  const [categoryFilter, setCategoryFilter] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [brandFilter, setBrandFilter] = useState('');
 
-  const categories = useMemo(() => uniqueSorted((items ?? []).map((i) => i.category)), [items]);
+  const categoryOptions = useMemo(
+    () => Array.from(new Set((items ?? []).map((i) => categoryKey(i.category)))).sort(compareCategories),
+    [items],
+  );
   const brands = useMemo(() => uniqueSorted((items ?? []).map((i) => i.brand)), [items]);
+
+  function matchesCategoryFilter(item: EquipmentItem) {
+    return selectedCategories.size === 0 || selectedCategories.has(categoryKey(item.category));
+  }
+
+  function toggleCategory(category: string) {
+    setSelectedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(category)) {
+        next.delete(category);
+      } else {
+        next.add(category);
+      }
+      return next;
+    });
+  }
 
   const visibleItems = useMemo(() => {
     if (!items) return undefined;
     const dir = sortDir === 'asc' ? 1 : -1;
     return items
       .filter((item) => (item.type === 'container' ? showContainer : showItem))
-      .filter((item) => categoryFilter === '' || item.category === categoryFilter)
+      .filter(matchesCategoryFilter)
       .filter((item) => brandFilter === '' || item.brand === brandFilter)
       .sort((a, b) => {
         const va = a[sortKey];
@@ -74,10 +93,19 @@ export function InventoryPage() {
         if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * dir;
         return String(va).localeCompare(String(vb), 'de') * dir;
       });
-  }, [items, showContainer, showItem, categoryFilter, brandFilter, sortKey, sortDir]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, showContainer, showItem, selectedCategories, brandFilter, sortKey, sortDir]);
 
-  const gridItems = useMemo(() => (items ?? []).filter((i) => i.type === 'item'), [items]);
-  const gridContainers = useMemo(() => (items ?? []).filter((i) => i.type === 'container'), [items]);
+  const gridItems = useMemo(
+    () => (items ?? []).filter((i) => i.type === 'item' && matchesCategoryFilter(i)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [items, selectedCategories],
+  );
+  const gridContainers = useMemo(
+    () => (items ?? []).filter((i) => i.type === 'container' && matchesCategoryFilter(i)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [items, selectedCategories],
+  );
 
   function handleSort(key: SortKey) {
     if (sortKey === key) {
@@ -132,6 +160,26 @@ export function InventoryPage() {
           + Ausrüstung hinzufügen
         </Link>
       </div>
+
+      {categoryOptions.length > 0 && (
+        <div className="category-facet">
+          <button
+            className={`category-facet__chip ${selectedCategories.size === 0 ? 'category-facet__chip--active' : ''}`}
+            onClick={() => setSelectedCategories(new Set())}
+          >
+            Alle
+          </button>
+          {categoryOptions.map((category) => (
+            <button
+              key={category}
+              className={`category-facet__chip ${selectedCategories.has(category) ? 'category-facet__chip--active' : ''}`}
+              onClick={() => toggleCategory(category)}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="view-toggle-row">
         <div className="view-toggle">
@@ -188,18 +236,6 @@ export function InventoryPage() {
                 <button className="th-sort" onClick={() => handleSort('category')}>
                   Kategorie {sortIndicator('category')}
                 </button>
-                <select
-                  className="th-filter"
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                >
-                  <option value="">Alle</option>
-                  {categories.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
               </th>
               <th>
                 <button className="th-sort" onClick={() => handleSort('brand')}>
