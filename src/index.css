@@ -485,6 +485,12 @@ body {
   color: var(--color-primary-dark);
 }
 
+.tour-card__actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.4rem;
+}
+
 .tour-title {
   font-size: 1.5rem;
   font-weight: 700;

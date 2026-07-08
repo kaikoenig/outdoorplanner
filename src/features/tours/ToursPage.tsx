@@ -2,7 +2,9 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { Link, useNavigate } from 'react-router-dom';
 import { v4 as uuid } from 'uuid';
 import { db } from '../../db';
+import type { Tour } from '../../types/models';
 import { formatWeight } from '../../utils/format';
+import { cloneContainerTree } from './containerTree';
 import { tourWeight } from './weight';
 
 export function ToursPage() {
@@ -22,6 +24,18 @@ export function ToursPage() {
     if (confirm(`Tour "${name}" wirklich löschen?`)) {
       await db.tours.delete(id);
     }
+  }
+
+  async function handleDuplicate(tour: Tour) {
+    const now = Date.now();
+    await db.tours.add({
+      ...tour,
+      id: uuid(),
+      name: `${tour.name}-Kopie`,
+      containers: cloneContainerTree(tour.containers),
+      createdAt: now,
+      updatedAt: now,
+    });
   }
 
   return (
@@ -44,9 +58,14 @@ export function ToursPage() {
             </Link>
             <p>{tour.containers.length} Container</p>
             <p className="tour-card__weight">{formatWeight(tourWeight(tour, itemsById))}</p>
-            <button className="button-link" onClick={() => handleDelete(tour.id, tour.name)}>
-              Löschen
-            </button>
+            <div className="tour-card__actions">
+              <button className="button-link" onClick={() => handleDuplicate(tour)}>
+                Duplizieren
+              </button>
+              <button className="button-link" onClick={() => handleDelete(tour.id, tour.name)}>
+                Löschen
+              </button>
+            </div>
           </div>
         ))}
       </div>

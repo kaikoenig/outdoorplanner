@@ -1,3 +1,4 @@
+import { v4 as uuid } from 'uuid';
 import type { EquipmentItem, TourContainer } from '../../types/models';
 
 export function findContainerNode(containers: TourContainer[], id: string): TourContainer | undefined {
@@ -82,6 +83,16 @@ export function usageCounts(containers: TourContainer[]): Map<string, number> {
   }
   visit(containers);
   return counts;
+}
+
+/** Deep-clones a container tree, assigning fresh ids to every container and content entry. */
+export function cloneContainerTree(containers: TourContainer[]): TourContainer[] {
+  return containers.map((c) => ({
+    ...c,
+    id: uuid(),
+    contents: c.contents.map((entry) => ({ ...entry, id: uuid() })),
+    containers: cloneContainerTree(c.containers),
+  }));
 }
 
 /** How many more units of `equipmentItemId` can still be used in the tour, given what's already used. */
