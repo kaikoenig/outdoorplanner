@@ -2,8 +2,9 @@ import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { ChevronIcon, TrashIcon } from '../../components/icons';
 import { NumberStepper } from '../../components/NumberStepper';
 import type { EquipmentItem, TourContainer } from '../../types/models';
-import { formatWeight } from '../../utils/format';
+import { formatPrice, formatWeight } from '../../utils/format';
 import { EquipmentImage } from '../inventory/EquipmentImage';
+import { containerPrice } from './price';
 import { containerWeight } from './weight';
 
 interface Props {
@@ -30,6 +31,7 @@ export function ContainerCard(props: Props) {
 
   const containerItem = itemsById.get(container.equipmentItemId);
   const weight = containerWeight(container, itemsById);
+  const price = containerPrice(container, itemsById);
   const isEmpty = container.contents.length === 0 && container.containers.length === 0;
 
   function handleRemoveContainer() {
@@ -72,7 +74,7 @@ export function ContainerCard(props: Props) {
         </button>
       </div>
       <p className="container-card__meta">
-        {containerItem?.name ?? 'Unbekannter Container'} &middot; {formatWeight(weight)}
+        {containerItem?.name ?? 'Unbekannter Container'} &middot; {formatWeight(weight)} &middot; {formatPrice(price)}
       </p>
 
       {!isCollapsed && (
@@ -96,7 +98,9 @@ export function ContainerCard(props: Props) {
                     value={entry.quantity}
                     onChange={(quantity) => onQuantityChange(container.id, entry.id, quantity)}
                   />
-                  <span className="content-row__weight">{formatWeight(item.weight * entry.quantity)}</span>
+                  <span className="content-row__weight">
+                    {formatWeight(item.weight * entry.quantity)} &middot; {formatPrice(item.price * entry.quantity)}
+                  </span>
                   <button
                     className="button-link"
                     onClick={() => onRemoveContent(container.id, entry.id)}

@@ -13,7 +13,7 @@ import { v4 as uuid } from 'uuid';
 import { ChevronIcon } from '../../components/icons';
 import { db } from '../../db';
 import type { EquipmentItem, Tour, TourContainer } from '../../types/models';
-import { categoryKey, compareCategories, formatWeight } from '../../utils/format';
+import { categoryKey, compareCategories, formatPrice, formatWeight } from '../../utils/format';
 import {
   allContainerIds,
   findContainerNode,
@@ -26,6 +26,7 @@ import {
 } from './containerTree';
 import { ContainerCard } from './ContainerCard';
 import { PoolItem } from './PoolItem';
+import { tourPrice } from './price';
 import { tourWeight } from './weight';
 
 interface DragData {
@@ -314,7 +315,10 @@ export function TourDetailPage() {
         value={currentTour.name}
         onChange={(e) => handleRenameTour(e.target.value)}
       />
-      <p className="tour-total-weight">Gesamtgewicht: {formatWeight(tourWeight(currentTour, itemsById))}</p>
+      <p className="tour-total-weight">
+        Gesamtgewicht: {formatWeight(tourWeight(currentTour, itemsById))} &middot; Gesamtpreis:{' '}
+        {formatPrice(tourPrice(currentTour, itemsById))}
+      </p>
 
       <DndContext collisionDetection={collisionDetection} onDragEnd={handleDragEnd}>
         <div className="tour-layout">

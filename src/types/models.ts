@@ -8,6 +8,7 @@ export interface EquipmentItem {
   weight: number; // grams
   brand: string;
   quantity: number;
+  price: number; // purchase price in €, per unit
   image?: Blob;
   createdAt: number;
   updatedAt: number;

@@ -16,6 +16,7 @@ const EMPTY: Omit<EquipmentItem, 'id' | 'createdAt' | 'updatedAt'> = {
   weight: 0,
   brand: '',
   quantity: 1,
+  price: 0,
   image: undefined,
 };
 
@@ -42,6 +43,7 @@ export function EquipmentFormPage() {
       weight: existing.weight,
       brand: existing.brand,
       quantity: existing.quantity,
+      price: existing.price,
       image: existing.image,
     });
     setLoaded(true);
@@ -164,6 +166,18 @@ export function EquipmentFormPage() {
             min={0}
             value={form.weight}
             onChange={(e) => setForm((f) => ({ ...f, weight: Number(e.target.value) }))}
+          />
+        </label>
+
+        <label>
+          Kaufpreis (€)
+          <input
+            required
+            type="number"
+            min={0}
+            step={0.01}
+            value={form.price}
+            onChange={(e) => setForm((f) => ({ ...f, price: Number(e.target.value) }))}
           />
         </label>
 

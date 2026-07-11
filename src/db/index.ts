@@ -32,3 +32,17 @@ db.version(2)
         tour.containers = normalizeContainers(tour.containers);
       });
   });
+
+db.version(3)
+  .stores({
+    equipmentItems: 'id, name, type, category, brand',
+    tours: 'id, name',
+  })
+  .upgrade(async (tx) => {
+    await tx
+      .table('equipmentItems')
+      .toCollection()
+      .modify((item: EquipmentItem) => {
+        item.price = item.price ?? 0;
+      });
+  });

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { GridIcon, ListIcon, PencilIcon, TrashIcon } from '../../components/icons';
 import { db } from '../../db';
 import type { EquipmentItem } from '../../types/models';
-import { categoryKey, compareCategories, formatWeight, uniqueSorted } from '../../utils/format';
+import { categoryKey, compareCategories, formatPrice, formatWeight, uniqueSorted } from '../../utils/format';
 import { EquipmentImage } from './EquipmentImage';
 
 type SortKey = 'name' | 'category' | 'brand' | 'weight' | 'quantity';
@@ -41,7 +41,7 @@ function EquipmentTile({
       <span className="equipment-tile__name">{item.name}</span>
       <span className="equipment-tile__meta">{[item.brand, item.category].filter(Boolean).join(' · ')}</span>
       <span className="equipment-tile__meta">
-        {formatWeight(item.weight)} &middot; {item.quantity}×
+        {formatWeight(item.weight)} &middot; {item.quantity}× &middot; {formatPrice(item.price)}
       </span>
     </div>
   );

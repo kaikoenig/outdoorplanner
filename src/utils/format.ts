@@ -5,6 +5,10 @@ export function formatWeight(grams: number): string {
   return `${grams} g`;
 }
 
+export function formatPrice(euros: number): string {
+  return euros.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
+}
+
 export function uniqueSorted(values: string[]): string[] {
   return Array.from(new Set(values.filter((v) => v.trim() !== ''))).sort((a, b) => a.localeCompare(b, 'de'));
 }
