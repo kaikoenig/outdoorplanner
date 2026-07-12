@@ -87,6 +87,7 @@ export function BackupPage() {
       const equipmentItems: EquipmentItem[] = await Promise.all(
         payload.equipmentItems.map(async ({ image, ...rest }) => ({
           ...rest,
+          price: rest.price ?? 0,
           image: image ? await dataUrlToBlob(image) : undefined,
         })),
       );
